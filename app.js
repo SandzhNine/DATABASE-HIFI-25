@@ -8,7 +8,7 @@ const methodOverride = require('method-override');
 const passport = require('passport');
 const mongoose = require('mongoose');
 const MongoStore = require('connect-mongo')(session);
-const connectDB = require('./db');  // Import fungsi koneksi DB singleton
+const connectDB = require('./db'); 
 
 // passport config
 require("./config/passport")(passport);
@@ -24,7 +24,6 @@ const app = express();
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
-// Connect to MongoDB before starting the app logic
 (async () => {
   try {
     await connectDB();
@@ -34,28 +33,25 @@ app.set('view engine', 'ejs');
   }
 })();
 
-// Setup session with persistent MongoDB store
 app.use(session({
   secret: 'keyboard cat',
   resave: false,
   saveUninitialized: false,
   store: new MongoStore({ mongooseConnection: mongoose.connection }),
-  cookie: { maxAge: 86400000 }
+  cookie: { maxAge:86400000 }
 }));
-
 app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(methodOverride('_method'));
 
-// Middleware to expose flash errors to views
-app.use((req, res, next) => {
+app.use((req,res,next)=> {
   res.locals.error_msg = req.flash('error_msg');
-  res.locals.error = req.flash('error');
+  res.locals.error  = req.flash('error');
   next();
-});
+})
 
-// Disable Morgan logger for troubleshooting timeout issues
+// Nonaktifkan sementara untuk troubleshooting
 // app.use(logger('dev'));
 
 app.use(express.json());
@@ -69,12 +65,12 @@ app.use('/dashboard', dashboardRouter);
 app.use('/auth', authRouter);
 
 // catch 404 and forward to error handler
-app.use((req, res, next) => {
+app.use(function(req, res, next) {
   next(createError(404));
 });
 
 // error handler
-app.use((err, req, res, next) => {
+app.use(function(err, req, res, next) {
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
 
