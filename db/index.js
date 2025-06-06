@@ -1,9 +1,9 @@
 const mongoose = require('mongoose');
-const { urlDb } = require('../config');  // Pastikan ada config urlDb yang benar
+const { urlDb } = require('../config');  
 
-// Fungsi koneksi singleton untuk reuse connection
+
 const connectDB = async () => {
-  if (mongoose.connection.readyState === 1) {  // 1 = connected
+  if (mongoose.connection.readyState === 1) {  
     return mongoose.connection;
   }
   return mongoose.connect(urlDb, {
