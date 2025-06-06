@@ -5,7 +5,7 @@
     { "src": "public/**/*", "use": "@vercel/static" }
   ],
   "routes": [
-    { "src": "/api/(.*)", "dest": "api/index.js" },
-    { "src": "/(.*)", "dest": "/public/$1" }
+    { "src": "/static/(.*)", "dest": "/public/$1" },       // Static asset diakses via /static/
+    { "src": "/(.*)", "dest": "api/index.js" }             // Semua route lain ke Express
   ]
 }
