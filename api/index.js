@@ -1,8 +1,5 @@
-const express = require('express');
-const app = express();
+// api/index.js
 
-app.get('/hello', (req, res) => {
-  res.json({ message: 'Hello from Express on Vercel!' });
-});
+const app = require('../app');  // Import Express app dari app.js
 
 module.exports = app;
