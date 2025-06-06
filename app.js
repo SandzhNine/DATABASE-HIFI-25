@@ -2,11 +2,13 @@ const createError = require('http-errors');
 const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
-const logger = require('morgan');   // bisa diapus gak nih
 const flash  = require('connect-flash');
 const session = require('express-session');
 const methodOverride = require('method-override');
 const passport = require('passport');
+const mongoose = require('mongoose');
+const MongoStore = require('connect-mongo')(session);
+const connectDB = require('./db');  // Import fungsi koneksi DB singleton
 
 // passport config
 require("./config/passport")(passport);
@@ -22,24 +24,40 @@ const app = express();
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
+// Connect to MongoDB before starting the app logic
+(async () => {
+  try {
+    await connectDB();
+    console.log('MongoDB connected');
+  } catch (err) {
+    console.error('MongoDB connection error:', err);
+  }
+})();
+
+// Setup session with persistent MongoDB store
 app.use(session({
   secret: 'keyboard cat',
   resave: false,
-  saveUninitialized: true,
-  cookie: { maxAge:86400000 }
+  saveUninitialized: false,
+  store: new MongoStore({ mongooseConnection: mongoose.connection }),
+  cookie: { maxAge: 86400000 }
 }));
+
 app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(methodOverride('_method'));
 
-app.use((req,res,next)=> {
+// Middleware to expose flash errors to views
+app.use((req, res, next) => {
   res.locals.error_msg = req.flash('error_msg');
-  res.locals.error  = req.flash('error');
-next();
-})
+  res.locals.error = req.flash('error');
+  next();
+});
 
-app.use(logger('dev'));
+// Disable Morgan logger for troubleshooting timeout issues
+// app.use(logger('dev'));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
@@ -51,20 +69,17 @@ app.use('/dashboard', dashboardRouter);
 app.use('/auth', authRouter);
 
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
+app.use((req, res, next) => {
   next(createError(404));
 });
 
 // error handler
-app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
+app.use((err, req, res, next) => {
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
 
-  // render the error page
   res.status(err.status || 500);
   res.render('error');
 });
 
 module.exports = app;
-
